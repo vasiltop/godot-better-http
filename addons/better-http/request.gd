@@ -30,7 +30,7 @@ func json(object: Variant) -> BetterHTTPRequest:
 	self.header("content-type", "application/json")
 	return self
 
-func send() -> Response:
+func send() -> BetterHTTPResponse:
 	var http = HTTPClient.new()
 	return await send_with_http(http)
 
@@ -45,19 +45,18 @@ func send_with_http(http: HTTPClient) -> BetterHTTPResponse:
 		http.poll()
 		await self._scene.process_frame
 
-	assert(http.get_status() == HTTPClient.STATUS_CONNECTED)
+	#assert(http.get_status() == HTTPClient.STATUS_CONNECTED)
+	if http.get_status() != HTTPClient.STATUS_CONNECTED:
+		return null
 
 	return await self._internal_send_with_http_no_connect(http)
 
 func _internal_send_with_http_no_connect(http: HTTPClient) -> BetterHTTPResponse:
-	var err = http.request_raw(self._method, self._url.path, self._headers, self._body)
-	assert(err == OK)
+	var err = http.request_raw(self._method, self._url.stringify_path(), self._headers, self._body)
 
 	while http.get_status() == HTTPClient.STATUS_REQUESTING:
 		http.poll()
 		await self._scene.process_frame
-
-	assert(http.get_status() == HTTPClient.STATUS_BODY or http.get_status() == HTTPClient.STATUS_CONNECTED)
 
 	if !http.has_response():
 		return null
@@ -82,7 +81,7 @@ func _internal_send_with_http_no_connect(http: HTTPClient) -> BetterHTTPResponse
 			await resp._internal_skip_body()
 			close = false
 		else:
-			var new_url = URL.parse(location)
+			var new_url = BetterHTTPURL.parse(location)
 			var eq = new_url.addr_eq(self._url)
 
 			self._url = new_url

@@ -7,7 +7,7 @@ var _default_headers: PackedStringArray
 var _scene: SceneTree
 var _max_redirects: int = 5
 
-func _init(node: Node, base_url: URL):
+func _init(node: Node, base_url: BetterHTTPURL):
 	self._scene = node.get_tree()
 	self._base_url = base_url
 
@@ -27,7 +27,7 @@ func dispatch(method: HTTPClient.Method, path: String) -> BetterHTTPRequest:
 	req._headers = self._default_headers.slice(0)
 	req._max_redirects = self._max_redirects
 	req._url = self._base_url.join(path)
-
+	
 	# needed for some sites that use a proxy of some sort
 	req.header("host", self._base_url.http_host())
 	req.header("connection", "keep-alive")
@@ -48,4 +48,3 @@ func http_patch(path: String = "/") -> BetterHTTPRequest:
 
 func http_delete(path: String = "/") -> BetterHTTPRequest:
 	return self.dispatch(HTTPClient.METHOD_DELETE, path)
-
